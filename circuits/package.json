@@ -1,0 +1,14 @@
+{
+  "name": "@vgdp/circuits",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "compile": "bash scripts/compile.sh",
+    "setup": "bash scripts/trusted_setup.sh",
+    "test-proof": "bash scripts/generate_test_proof.sh"
+  },
+  "dependencies": {
+    "circomlib": "^2.0.5",
+    "snarkjs": "^0.7.5"
+  }
+}

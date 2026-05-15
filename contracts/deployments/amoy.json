@@ -1,0 +1,9 @@
+{
+  "registryAddress": "",
+  "disputeResolverAddress": "",
+  "reputationAddress": "",
+  "locationVerifierAddress": "",
+  "chainId": 80002,
+  "network": "polygon-amoy",
+  "deployedAt": ""
+}

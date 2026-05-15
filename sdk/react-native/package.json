@@ -1,0 +1,15 @@
+{
+  "name": "@vgdp/react-native",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/VGDPClient.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "react-native": ">=0.73.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

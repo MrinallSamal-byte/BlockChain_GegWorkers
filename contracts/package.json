@@ -1,0 +1,19 @@
+{
+  "name": "@vgdp/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "forge test -vvv",
+    "deploy:amoy": "forge script script/DeployAmoy.s.sol --rpc-url $POLYGON_AMOY_RPC_URL --broadcast --verify",
+    "deploy:mainnet": "forge script script/DeployMainnet.s.sol --rpc-url $POLYGON_MAINNET_RPC_URL --broadcast --verify",
+    "configure": "forge script script/ConfigureContracts.s.sol --rpc-url $POLYGON_AMOY_RPC_URL --broadcast",
+    "coverage": "forge coverage"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.4.7",
+    "hardhat": "^2.22.0",
+    "typescript": "^5.7.2"
+  }
+}

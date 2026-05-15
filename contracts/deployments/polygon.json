@@ -1,0 +1,9 @@
+{
+  "registryAddress": "",
+  "disputeResolverAddress": "",
+  "reputationAddress": "",
+  "locationVerifierAddress": "",
+  "chainId": 137,
+  "network": "polygon-pos-mainnet",
+  "deployedAt": ""
+}

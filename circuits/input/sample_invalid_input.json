@@ -1,0 +1,11 @@
+{
+  "targetLatShiftedE7": "1029715990",
+  "targetLonShiftedE7": "1975947220",
+  "maxRadiusMeters": "75",
+  "orderIdField": "12345678901234567890123456789012345678901234567890",
+  "riderDidField": "98765432109876543210987654321098765432109876543210",
+  "timestampField": "11111111111111111111111111111111111111111111111111",
+  "metersPerLonE7Q": "7819",
+  "actualLatShiftedE7": "1030715990",
+  "actualLonShiftedE7": "1976947220"
+}

@@ -1,0 +1,452 @@
+openapi: 3.0.3
+info:
+  title: VGDP Validator API
+  version: 0.1.0
+  description: >
+    REST API for registering delivery targets, submitting ZK proof bundles,
+    resolving disputes, and reading rider trust scores with consent.
+    Chain: Polygon Amoy (testnet, chainId 80002) → Polygon PoS mainnet (chainId 137).
+servers:
+  - url: https://api.vgdp.example/v1
+    description: Production
+  - url: https://sandbox-api.vgdp.example/v1
+    description: Sandbox
+security:
+  - CompanyApiKey: []
+
+paths:
+  /orders:
+    post:
+      summary: Register delivery coordinates
+      operationId: createOrder
+      security:
+        - CompanyApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+            example:
+              orderId: "SWG-2026-000123"
+              riderId: "rider_987"
+              riderDid: "did:ethr:0x8b6A000000000000000000000000000000000000"
+              targetLatE7: 129715990
+              targetLonE7: 775947220
+              radiusMeters: 75
+              webhookUrl: "https://partner.example/webhooks/vgdp"
+      responses:
+        "201":
+          description: Order registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateOrderResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /proofs:
+    post:
+      summary: Submit proof bundle
+      operationId: submitProof
+      security:
+        - RiderJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitProofRequest"
+      responses:
+        "201":
+          description: Proof registered on-chain
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmitProofResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /orders/{orderId}/proof:
+    get:
+      summary: Retrieve proof status
+      operationId: getOrderProof
+      security:
+        - CompanyApiKey: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Proof status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProofStatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /disputes/resolve:
+    post:
+      summary: Trigger automated dispute resolution
+      operationId: resolveDispute
+      security:
+        - CompanyApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveDisputeRequest"
+      responses:
+        "200":
+          description: Dispute resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolveDisputeResponse"
+        "202":
+          description: Transaction submitted and pending finality
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolveDisputePendingResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /riders/{riderId}/trust:
+    get:
+      summary: Fetch rider trust score with rider consent
+      operationId: getRiderTrust
+      security:
+        - CompanyApiKey: []
+      parameters:
+        - name: riderId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Rider-DID-Hash
+          in: header
+          required: true
+          schema:
+            type: string
+            pattern: "^0x[0-9a-fA-F]{64}$"
+        - name: X-Rider-Wallet
+          in: header
+          required: true
+          schema:
+            type: string
+            pattern: "^0x[0-9a-fA-F]{40}$"
+        - name: X-Rider-Consent-Deadline
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: X-Rider-Consent-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+            pattern: "^0x[0-9a-fA-F]+$"
+      responses:
+        "200":
+          description: Trust score
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiderTrustResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    CompanyApiKey:
+      type: apiKey
+      in: header
+      name: X-VGDP-Api-Key
+      description: Company backend API key. Never embed in mobile apps.
+    RiderJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Rider JWT issued by the company backend.
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Authenticated but not allowed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Duplicate or conflicting resource
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    CreateOrderRequest:
+      type: object
+      required: [orderId, riderId, riderDid, targetLatE7, targetLonE7, radiusMeters]
+      properties:
+        orderId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        riderId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        riderDid:
+          type: string
+          minLength: 8
+          maxLength: 256
+        targetLatE7:
+          type: integer
+          minimum: -900000000
+          maximum: 900000000
+          description: Latitude scaled by 1e7
+        targetLonE7:
+          type: integer
+          minimum: -1800000000
+          maximum: 1800000000
+          description: Longitude scaled by 1e7
+        radiusMeters:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        webhookUrl:
+          type: string
+          format: uri
+
+    CreateOrderResponse:
+      type: object
+      required: [orderId, orderIdHash, status]
+      properties:
+        orderId:
+          type: string
+        orderIdHash:
+          $ref: "#/components/schemas/Bytes32"
+        status:
+          type: string
+          enum: [registered]
+
+    SubmitProofRequest:
+      type: object
+      required: [orderId, riderDid, riderWallet, deliveredAtEpoch, photoPHash, photoSalt, proof, publicSignals, solidityProof, bundleNonce, didSignature]
+      properties:
+        orderId:
+          type: string
+        riderDid:
+          type: string
+        riderWallet:
+          $ref: "#/components/schemas/Address"
+        deliveredAtEpoch:
+          type: integer
+          format: int64
+        photoPHash:
+          $ref: "#/components/schemas/Bytes32"
+        photoSalt:
+          $ref: "#/components/schemas/Bytes32"
+        proof:
+          type: object
+          description: snarkjs Groth16 proof JSON
+          additionalProperties: true
+        publicSignals:
+          type: array
+          minItems: 6
+          maxItems: 6
+          items:
+            type: string
+        solidityProof:
+          $ref: "#/components/schemas/SolidityProof"
+        bundleNonce:
+          $ref: "#/components/schemas/Bytes32"
+        didSignature:
+          type: string
+          pattern: "^0x[0-9a-fA-F]+"
+        mobileAttestationJwt:
+          type: string
+
+    SubmitProofResponse:
+      type: object
+      required: [proofId, transactionHash, merkleRoot, status]
+      properties:
+        proofId:
+          $ref: "#/components/schemas/Bytes32"
+        transactionHash:
+          type: string
+        blockNumber:
+          type: integer
+        merkleRoot:
+          $ref: "#/components/schemas/Bytes32"
+        status:
+          type: string
+          enum: [registered]
+
+    ProofStatusResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+        orderIdHash:
+          $ref: "#/components/schemas/Bytes32"
+        proofId:
+          $ref: "#/components/schemas/Bytes32"
+        transactionHash:
+          type: string
+        status:
+          type: string
+          enum: [registered, proof_submitted, disputed, resolved, not_found]
+
+    ResolveDisputeRequest:
+      type: object
+      required: [orderId, proofId, expectedLatE7, expectedLonE7, radiusMeters, reasonCode]
+      properties:
+        orderId:
+          type: string
+        proofId:
+          $ref: "#/components/schemas/Bytes32"
+        expectedLatE7:
+          type: integer
+        expectedLonE7:
+          type: integer
+        radiusMeters:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        reasonCode:
+          type: string
+          enum: [ORDER_NOT_RECEIVED, WRONG_LOCATION, PHOTO_MISMATCH]
+
+    ResolveDisputeResponse:
+      type: object
+      required: [proofId, outcome, transactionHash]
+      properties:
+        proofId:
+          $ref: "#/components/schemas/Bytes32"
+        outcome:
+          type: string
+          enum: [rider_vindicated, customer_refund, manual_review]
+        transactionHash:
+          type: string
+        resolvedAtEpoch:
+          type: integer
+          format: int64
+
+    ResolveDisputePendingResponse:
+      type: object
+      properties:
+        proofId:
+          $ref: "#/components/schemas/Bytes32"
+        status:
+          type: string
+          enum: [pending]
+        transactionHash:
+          type: string
+
+    RiderTrustResponse:
+      type: object
+      required: [riderId, riderDidHash, score, scale, consentVerified]
+      properties:
+        riderId:
+          type: string
+        riderDidHash:
+          $ref: "#/components/schemas/Bytes32"
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        scale:
+          type: string
+          example: "0-100"
+        consentVerified:
+          type: boolean
+
+    SolidityProof:
+      type: object
+      required: [a, b, c]
+      properties:
+        a:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: string
+        b:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: array
+            minItems: 2
+            maxItems: 2
+            items:
+              type: string
+        c:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: string
+
+    Address:
+      type: string
+      pattern: "^0x[0-9a-fA-F]{40}$"
+
+    Bytes32:
+      type: string
+      pattern: "^0x[0-9a-fA-F]{64}$"
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        requestId:
+          type: string
