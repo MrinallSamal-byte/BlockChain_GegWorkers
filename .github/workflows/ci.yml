@@ -64,7 +64,7 @@ jobs:
         run: cd validator && pnpm build
 
       - name: Test validator
-        run: cd validator && pnpm vitest run
+        run: pnpm --filter @vgdp/validator run test
 
   circuits:
     runs-on: ubuntu-latest

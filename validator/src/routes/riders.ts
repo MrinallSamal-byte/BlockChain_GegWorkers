@@ -1,6 +1,6 @@
 import { Router, type Router as ExpressRouter } from "express";
 import { z } from "zod";
-import { companyFromApiKey, httpError } from "../config.js";
+import { companyFromApiKey } from "../config.js";
 import { reputation } from "../config.js";
 
 const router: ExpressRouter = Router();
