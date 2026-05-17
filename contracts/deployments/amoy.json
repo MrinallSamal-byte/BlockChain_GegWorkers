@@ -1,9 +1,33 @@
 {
-  "registryAddress": "",
-  "disputeResolverAddress": "",
-  "reputationAddress": "",
-  "locationVerifierAddress": "",
-  "chainId": 80002,
   "network": "polygon-amoy",
-  "deployedAt": ""
+  "chainId": 80002,
+  "deployedAt": "",
+  "contracts": {
+    "locationVerifier": {
+      "address": "",
+      "txHash": "",
+      "blockNumber": 0
+    },
+    "deliveryProofRegistry": {
+      "address": "",
+      "txHash": "",
+      "blockNumber": 0
+    },
+    "reputation": {
+      "address": "",
+      "txHash": "",
+      "blockNumber": 0
+    },
+    "disputeResolver": {
+      "address": "",
+      "txHash": "",
+      "blockNumber": 0
+    }
+  },
+  "configuration": {
+    "setDisputeResolverTx": "",
+    "setValidatorTx": "",
+    "setScoreUpdaterTx": "",
+    "setCompanyTx": ""
+  }
 }

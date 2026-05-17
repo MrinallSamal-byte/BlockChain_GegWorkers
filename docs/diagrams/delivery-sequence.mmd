@@ -1,0 +1,41 @@
+sequenceDiagram
+    participant CB as Company Backend
+    participant API as VGDP Validator API
+    participant SDK as Rider App + SDK
+    participant POL as Polygon PoS
+    participant REG as DeliveryProofRegistry
+    participant IDX as Event Indexer
+
+    CB->>API: POST /orders (orderId, targetLatE7, targetLonE7, radiusMeters, riderDid, webhookUrl)
+    API-->>CB: 201 {orderId, orderIdHash, status: "registered"}
+
+    Note over SDK: Rider enters 200m geofence — SDK starts GPS polling every 5s
+
+    Note over SDK: Rider taps "Delivered"
+
+    SDK->>SDK: capture GPS (private), NTP timestamp
+    SDK->>SDK: computePhotoPHash, generate photoSalt
+    SDK->>SDK: photoHashCommitment = keccak256(photoPHash, photoSalt)
+    SDK->>SDK: timestampHash = keccak256(orderIdHash, deliveredAtEpoch)
+    SDK->>SDK: generate Groth16 ZK proof (snarkjs, local)
+    SDK->>SDK: solidityProofHash, merkleRoot(sorted leaves)
+    SDK->>SDK: bundleDigest = keccak256("VGDP_PROOF_BUNDLE_V1", ...)
+    SDK->>SDK: sign bundleDigest with rider DID key
+
+    SDK->>API: POST /proofs (proof bundle + rider JWT)
+    API->>API: verify rider JWT
+    API->>API: verify DID signature over bundleDigest
+    API->>API: assertTimestamp(deliveredAtEpoch)
+    API->>API: verify public signals match registered order
+    API->>API: snarkjs.groth16.verify(verificationKey, publicSignals, proof)
+
+    API->>REG: registerProof(orderIdHash, zkProofHash, photoHashCommitment, timestampHash, riderDidHash, merkleRoot, deliveredAtEpoch)
+    REG-->>POL: tx mined (2 confirmations)
+    POL-->>REG: emit DeliveryProofRegistered(proofId, ...)
+
+    REG-->>IDX: DeliveryProofRegistered event
+    IDX->>CB: HMAC-signed webhook {type: "delivery.proof_registered", proofId, transactionHash}
+
+    API-->>SDK: 201 {proofId, transactionHash, merkleRoot, status: "registered"}
+
+    Note over CB: Order marked cryptographically delivered — no manual GPS review needed

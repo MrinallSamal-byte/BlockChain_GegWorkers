@@ -3,7 +3,7 @@ import { verifyRiderJwt } from "../config.js";
 import { ProofBundleSchema } from "../auth/schemas.js";
 import { submitProof } from "../blockchain/registryClient.js";
 
-const router = express.Router();
+const router: express.Router = express.Router();
 
 router.post("/", async (req, res, next) => {
   try {

@@ -1,0 +1,50 @@
+sequenceDiagram
+    participant CU as Customer App
+    participant CB as Company Backend
+    participant API as VGDP Validator API
+    participant DR as DisputeResolver
+    participant VER as LocationVerifier
+    participant REG as DeliveryProofRegistry
+    participant REP as Reputation
+    participant IDX as Event Indexer
+
+    CU->>CB: tap "Order not received"
+    CB->>API: POST /disputes/resolve (orderId, proofId, expectedLatE7, expectedLonE7, radiusMeters, solidityProof)
+
+    API->>API: companyFromApiKey — authenticate company
+    API->>API: look up order and proofId in DB
+
+    API->>DR: resolveDispute(proofId, expectedLatE7, expectedLonE7, radiusMeters, proof)
+
+    DR->>REG: getProof(proofId)
+    REG-->>DR: ProofRecord {zkProofHash, orderIdHash, riderDidHash, ...}
+
+    DR->>DR: actualProofHash = keccak256(abi.encode(proof.a, proof.b, proof.c))
+    DR->>DR: proofHashMatches = (actualProofHash == record.zkProofHash)
+    DR->>DR: publicSignals = _publicSignals(orderIdHash, riderDidHash, timestampHash, latE7, lonE7, radius)
+
+    DR->>VER: verifyProof(proof.a, proof.b, proof.c, publicSignals)
+    VER-->>DR: true / false (Groth16 pairing check)
+
+    alt proof valid (hash matches AND verifier returns true)
+        DR->>REP: updateAfterDispute(riderDidHash, riderVindicated=true)
+        DR->>REG: markResolved(proofId)
+        DR-->>API: Outcome.RiderVindicated (1)
+        DR->>DR: emit DisputeResolved(..., outcome=RiderVindicated)
+    else proof invalid
+        DR->>REP: updateAfterDispute(riderDidHash, riderVindicated=false)
+        DR->>REG: markResolved(proofId)
+        DR-->>API: Outcome.CustomerRefund (2)
+        DR->>DR: emit DisputeResolved(..., outcome=CustomerRefund)
+    end
+
+    DR-->>IDX: DisputeResolved event
+    IDX->>CB: HMAC-signed webhook {type: "delivery.dispute_resolved", outcome, transactionHash}
+
+    API-->>CB: 200 {proofId, outcome, transactionHash, resolvedAtEpoch}
+
+    alt outcome = rider_vindicated
+        CB-->>CU: show "Delivery verified — escalate to manual review?"
+    else outcome = customer_refund
+        CB-->>CU: show "Refund approved automatically"
+    end

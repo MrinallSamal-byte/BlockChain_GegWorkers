@@ -1,0 +1,8 @@
+apiVersion: v2
+name: vgdp-validator
+description: VGDP Validator — off-chain ZK proof verification and Polygon submission service
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+maintainers:
+  - name: VGDP Platform Team

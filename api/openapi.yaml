@@ -113,6 +113,17 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/ResolveDisputeRequest"
+            example:
+              orderId: "SWG-2026-000123"
+              proofId: "0x0000000000000000000000000000000000000000000000000000000000000001"
+              expectedLatE7: 129715990
+              expectedLonE7: 775947220
+              radiusMeters: 75
+              reasonCode: "ORDER_NOT_RECEIVED"
+              solidityProof:
+                a: ["1", "2"]
+                b: [["3", "4"], ["5", "6"]]
+                c: ["7", "8"]
       responses:
         "200":
           description: Dispute resolved
@@ -345,7 +356,7 @@ components:
 
     ResolveDisputeRequest:
       type: object
-      required: [orderId, proofId, expectedLatE7, expectedLonE7, radiusMeters, reasonCode]
+      required: [orderId, proofId, expectedLatE7, expectedLonE7, radiusMeters, reasonCode, solidityProof]
       properties:
         orderId:
           type: string
@@ -353,8 +364,12 @@ components:
           $ref: "#/components/schemas/Bytes32"
         expectedLatE7:
           type: integer
+          minimum: -900000000
+          maximum: 900000000
         expectedLonE7:
           type: integer
+          minimum: -1800000000
+          maximum: 1800000000
         radiusMeters:
           type: integer
           minimum: 1
@@ -362,16 +377,21 @@ components:
         reasonCode:
           type: string
           enum: [ORDER_NOT_RECEIVED, WRONG_LOCATION, PHOTO_MISMATCH]
+        solidityProof:
+          $ref: "#/components/schemas/SolidityProof"
+          description: >
+            The Groth16 Solidity calldata proof from the original delivery bundle.
+            Obtain from proof_bundles storage using the proofId.
 
     ResolveDisputeResponse:
       type: object
-      required: [proofId, outcome, transactionHash]
+      required: [proofId, outcome, transactionHash, resolvedAtEpoch]
       properties:
         proofId:
           $ref: "#/components/schemas/Bytes32"
         outcome:
           type: string
-          enum: [rider_vindicated, customer_refund, manual_review]
+          enum: [rider_vindicated, customer_refund, unknown]
         transactionHash:
           type: string
         resolvedAtEpoch:
@@ -410,6 +430,7 @@ components:
     SolidityProof:
       type: object
       required: [a, b, c]
+      description: Groth16 proof in Solidity calldata format from snarkjs exportSolidityCallData
       properties:
         a:
           type: array

@@ -1,0 +1,29 @@
+{
+  "name": "vgdp",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "test:contracts": "cd contracts && forge test -vvv",
+    "test:circuits": "cd circuits && bash scripts/generate_test_proof.sh",
+    "test:validator": "cd validator && pnpm vitest run",
+    "compile:circuits": "cd circuits && bash scripts/compile.sh",
+    "setup:circuits": "cd circuits && bash scripts/trusted_setup.sh",
+    "deploy:amoy": "cd contracts && pnpm deploy:amoy",
+    "deploy:mainnet": "cd contracts && pnpm deploy:mainnet",
+    "configure:amoy": "cd contracts && forge script script/ConfigureContracts.s.sol --rpc-url $POLYGON_AMOY_RPC_URL --broadcast",
+    "validator:dev": "cd validator && pnpm dev",
+    "validator:start": "cd validator && pnpm start",
+    "lint": "pnpm -r exec eslint src --ext .ts --max-warnings 0",
+    "clean": "pnpm -r exec rm -rf dist out build && forge clean --root contracts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

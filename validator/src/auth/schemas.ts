@@ -13,6 +13,7 @@ export const OrderSchema = z.object({
 export const Hex32 = z.string().regex(/^0x[0-9a-fA-F]{64}$/);
 export const BigNumberishString = z.union([
   z.string().regex(/^[0-9]+$/),
+  z.string().regex(/^0x[0-9a-fA-F]+$/),
   z.number().int().nonnegative()
 ]);
 
@@ -33,6 +34,7 @@ export const SolidityProofSchema = z.object({
 
 export const ProofBundleSchema = z.object({
   orderId: z.string().min(1).max(128),
+  orderIdHash: Hex32.optional(),
   riderDid: z.string().min(8).max(256),
   riderWallet: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
   deliveredAtEpoch: z.number().int().positive(),
@@ -43,6 +45,7 @@ export const ProofBundleSchema = z.object({
   solidityProof: SolidityProofSchema,
   bundleNonce: Hex32,
   didSignature: z.string().regex(/^0x[0-9a-fA-F]+$/),
+  merkleRoot: Hex32.optional(),
   mobileAttestationJwt: z.string().optional()
 });
 

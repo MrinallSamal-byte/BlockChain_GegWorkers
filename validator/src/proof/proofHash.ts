@@ -1,7 +1,9 @@
 import { ethers } from "ethers";
 import type { SolidityProof } from "../auth/schemas.js";
-import { SNARK_SCALAR_FIELD } from "../config.js";
 import type { OrderRecord } from "../config.js";
+
+const SNARK_SCALAR_FIELD =
+  21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 
 export function solidityProofHash(solidityProof: SolidityProof): string {
   const encoded = ethers.AbiCoder.defaultAbiCoder().encode(

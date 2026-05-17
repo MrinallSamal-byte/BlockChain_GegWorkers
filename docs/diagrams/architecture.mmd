@@ -1,0 +1,51 @@
+flowchart TB
+    subgraph RiderApp["Rider App"]
+        SDK["VGDP SDK\n(React Native / Swift / Kotlin)"]
+    end
+
+    subgraph CompanyBackend["Company Backend"]
+        CB["Company Server\n(orders, auth, webhooks)"]
+        CA["Customer App\n(report issue)"]
+    end
+
+    subgraph Validator["VGDP Validator (K8s)"]
+        API["API Service\n(Express / Node 22)"]
+        WORKER["Webhook Worker"]
+        INDEXER["Event Indexer"]
+        DB[("PostgreSQL\n(orders, proofs, webhooks)")]
+        REDIS[("Redis\n(job queue)")]
+    end
+
+    subgraph Polygon["Polygon PoS"]
+        REG["DeliveryProofRegistry"]
+        DISP["DisputeResolver"]
+        REP["Reputation"]
+        VER["LocationVerifier\n(Groth16)"]
+    end
+
+    CB -- "POST /orders\n(target coords, radius)" --> API
+    SDK -- "POST /proofs\n(ZK proof bundle)" --> API
+    CA -- "POST /disputes/resolve" --> CB
+    CB -- "POST /disputes/resolve" --> API
+
+    API --> DB
+    API --> REDIS
+    WORKER --> REDIS
+    INDEXER --> DB
+
+    API -- "registerProof()\nethers.js tx" --> REG
+    API -- "resolveDispute()\nethers.js tx" --> DISP
+
+    DISP -- "verifyProof()" --> VER
+    DISP -- "updateAfterDispute()" --> REP
+    DISP -- "markResolved()" --> REG
+
+    REG -- "DeliveryProofRegistered event" --> INDEXER
+    DISP -- "DisputeResolved event" --> INDEXER
+
+    WORKER -- "HMAC-signed webhook" --> CB
+
+    style RiderApp fill:#e8f4f8,stroke:#2196f3
+    style CompanyBackend fill:#f3e8f8,stroke:#9c27b0
+    style Validator fill:#e8f8e8,stroke:#4caf50
+    style Polygon fill:#fff8e1,stroke:#ff9800

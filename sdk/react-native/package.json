@@ -2,14 +2,27 @@
   "name": "@vgdp/react-native",
   "version": "0.1.0",
   "type": "module",
-  "main": "src/VGDPClient.ts",
+  "main": "dist/VGDPClient.js",
+  "types": "dist/VGDPClient.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/VGDPClient.js",
+      "types": "./dist/VGDPClient.d.ts"
+    }
+  },
   "scripts": {
     "build": "tsc"
+  },
+  "dependencies": {
+    "@vgdp/shared": "workspace:*",
+    "ethers": "^6.16.0",
+    "snarkjs": "^0.7.5"
   },
   "peerDependencies": {
     "react-native": ">=0.73.0"
   },
   "devDependencies": {
+    "@types/snarkjs": "^0.7.9",
     "typescript": "^5.7.2"
   }
 }

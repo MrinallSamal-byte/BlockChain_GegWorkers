@@ -1,21 +1,21 @@
 import express from "express";
-import { z } from "zod";
-import { companyFromApiKey, hashUtf8, httpError, orders, orderKey } from "../config.js";
+import { companyFromApiKey, hashUtf8, httpError } from "../config.js";
 import { OrderSchema } from "../auth/schemas.js";
+import { orderRepository } from "../db/repositories/orderRepository.js";
 
-const router = express.Router();
+const router: express.Router = express.Router();
 
 router.post("/", async (req, res, next) => {
   try {
     const companyId = companyFromApiKey(req);
     const body = OrderSchema.parse(req.body);
-    const key = orderKey(companyId, body.orderId);
-    if (orders.has(key)) throw httpError(409, "Order already registered");
+    const existing = await orderRepository.findByKey(companyId, body.orderId);
+    if (existing) throw httpError(409, "Order already registered");
 
     const orderIdHash = hashUtf8(`${companyId}:${body.orderId}`);
     const riderDidHash = hashUtf8(body.riderDid);
 
-    orders.set(key, {
+    const record = await orderRepository.create({
       companyId,
       orderId: body.orderId,
       orderIdHash,
@@ -30,16 +30,16 @@ router.post("/", async (req, res, next) => {
       status: "registered"
     });
 
-    res.status(201).json({ orderId: body.orderId, orderIdHash, status: "registered" });
+    res.status(201).json({ orderId: record.orderId, orderIdHash: record.orderIdHash, status: "registered" });
   } catch (err) {
     next(err);
   }
 });
 
-router.get("/:orderId/proof", (req, res, next) => {
+router.get("/:orderId/proof", async (req, res, next) => {
   try {
     const companyId = companyFromApiKey(req);
-    const order = orders.get(orderKey(companyId, req.params.orderId));
+    const order = await orderRepository.findByKey(companyId, req.params.orderId);
     if (!order) throw httpError(404, "Order not found");
     res.json({
       orderId: order.orderId,

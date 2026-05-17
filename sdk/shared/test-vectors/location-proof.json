@@ -1,0 +1,53 @@
+{
+  "valid_delivery": {
+    "description": "Rider within 50m of target. Should produce a valid proof.",
+    "publicInputs": {
+      "targetLatE7": 129715990,
+      "targetLonE7": 775947220,
+      "maxRadiusMeters": 75,
+      "orderIdField": "12345678901234567890",
+      "riderDidField": "98765432109876543210",
+      "timestampField": "11111111111111111111"
+    },
+    "privateInputs": {
+      "metersPerLonE7Q": 108479,
+      "actualLatShiftedE7": 1029715940,
+      "actualLonShiftedE7": 1775947260
+    },
+    "expectedValid": true
+  },
+  "outside_radius": {
+    "description": "Rider 500m from target. Should fail proof generation.",
+    "publicInputs": {
+      "targetLatE7": 129715990,
+      "targetLonE7": 775947220,
+      "maxRadiusMeters": 75,
+      "orderIdField": "12345678901234567890",
+      "riderDidField": "98765432109876543210",
+      "timestampField": "11111111111111111111"
+    },
+    "privateInputs": {
+      "metersPerLonE7Q": 108479,
+      "actualLatShiftedE7": 1030215990,
+      "actualLonShiftedE7": 1776447220
+    },
+    "expectedValid": false
+  },
+  "boundary_exact": {
+    "description": "Rider at exactly 75m. Should be valid (≤ radius).",
+    "publicInputs": {
+      "targetLatE7": 129715990,
+      "targetLonE7": 775947220,
+      "maxRadiusMeters": 75,
+      "orderIdField": "12345678901234567890",
+      "riderDidField": "98765432109876543210",
+      "timestampField": "11111111111111111111"
+    },
+    "privateInputs": {
+      "metersPerLonE7Q": 108479,
+      "actualLatShiftedE7": 1030390890,
+      "actualLonShiftedE7": 1775947220
+    },
+    "expectedValid": true
+  }
+}

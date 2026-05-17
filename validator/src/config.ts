@@ -2,14 +2,9 @@ import "dotenv/config";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import express from "express";
-import helmet from "helmet";
-import cors from "cors";
 import jwt from "jsonwebtoken";
 import pino from "pino";
-import stableStringify from "json-stable-stringify";
-import { z } from "zod";
 import { ethers } from "ethers";
-import * as snarkjs from "snarkjs";
 
 export const log = pino({ level: process.env.LOG_LEVEL ?? "info" });
 
@@ -33,6 +28,34 @@ export const registryAbi = [
 export const provider = new ethers.JsonRpcProvider(requiredEnv("POLYGON_RPC_URL"));
 export const validatorWallet = new ethers.Wallet(requiredEnv("VALIDATOR_PRIVATE_KEY"), provider);
 export const registry = new ethers.Contract(requiredEnv("REGISTRY_ADDRESS"), registryAbi, validatorWallet);
+
+export const disputeResolverAbi = [
+  "function resolveDispute(bytes32 proofId, int32 expectedLatE7, int32 expectedLonE7, uint32 radiusMeters, tuple(uint256[2] a, uint256[2][2] b, uint256[2] c) proof) external returns (uint8)",
+  "event DisputeResolved(bytes32 indexed proofId, bytes32 indexed orderIdHash, bytes32 indexed riderDidHash, uint8 outcome, bool proofValid, address resolver)"
+];
+
+export const reputationAbi = [
+  "function trustScoreWithConsent(bytes32 riderDidHash, address riderWallet, uint256 deadline, bytes signature) external view returns (uint8)",
+  "function updateAfterDispute(bytes32 riderDidHash, bool riderVindicated) external"
+];
+
+export const disputeResolver = new ethers.Contract(
+  requiredEnv("DISPUTE_RESOLVER_ADDRESS"),
+  disputeResolverAbi,
+  provider
+);
+
+export const disputeResolverWithSigner = new ethers.Contract(
+  requiredEnv("DISPUTE_RESOLVER_ADDRESS"),
+  disputeResolverAbi,
+  validatorWallet
+);
+
+export const reputation = new ethers.Contract(
+  requiredEnv("REPUTATION_ADDRESS"),
+  reputationAbi,
+  provider
+);
 
 export const verificationKey = JSON.parse(
   fs.readFileSync(requiredEnv("VERIFICATION_KEY_PATH"), "utf8")

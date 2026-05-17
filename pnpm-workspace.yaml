@@ -1,0 +1,7 @@
+packages:
+  - "contracts"
+  - "circuits"
+  - "validator"
+  - "sdk/react-native"
+  - "sdk/shared"
+  - "integrations/*"

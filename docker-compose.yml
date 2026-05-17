@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  validator:
+    build:
+      context: .
+      dockerfile: validator/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./validator/.env
+    volumes:
+      - ./validator/zk:/app/validator/zk:ro
+      - ./validator/keys:/app/validator/keys:ro
+    restart: unless-stopped
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    command: http validator:8080
+    ports:
+      - "4040:4040"
+    depends_on:
+      - validator
+    profiles:
+      - dev

@@ -1,0 +1,23 @@
+{
+  "orderId": "SWG-2026-000001",
+  "riderDid": "did:ethr:0x8b6A000000000000000000000000000000000001",
+  "riderWallet": "0x8b6A000000000000000000000000000000000001",
+  "deliveredAtEpoch": 1748261200,
+  "photoPHash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "photoSalt": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "proof": {
+    "pi_a": ["0", "0", "1"],
+    "pi_b": [["0", "0"], ["0", "0"], ["1", "0"]],
+    "pi_c": ["0", "0", "1"],
+    "protocol": "groth16",
+    "curve": "bn128"
+  },
+  "publicSignals": ["1029715990", "2575947220", "75", "12345", "67890", "11111"],
+  "solidityProof": {
+    "a": ["0", "0"],
+    "b": [["0", "0"], ["0", "0"]],
+    "c": ["0", "0"]
+  },
+  "bundleNonce": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "didSignature": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+}

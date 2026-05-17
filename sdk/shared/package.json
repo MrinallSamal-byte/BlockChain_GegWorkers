@@ -1,0 +1,27 @@
+{
+  "name": "@vgdp/shared",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/schemas/types.js",
+  "types": "dist/schemas/types.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/schemas/types.js",
+      "types": "./dist/schemas/types.d.ts"
+    },
+    "./types": {
+      "import": "./dist/schemas/types.js",
+      "types": "./dist/schemas/types.d.ts"
+    },
+    "./zk": {
+      "import": "./dist/zk/publicSignals.js",
+      "types": "./dist/zk/publicSignals.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

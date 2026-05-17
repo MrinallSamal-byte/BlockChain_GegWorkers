@@ -1,0 +1,199 @@
+{
+  "info": {
+    "_postman_id": "vgdp-collection-v1",
+    "name": "VGDP Validator API",
+    "description": "Verifiable Gig Delivery Proof — complete API collection for company backend and rider app integration.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://api.vgdp.example/v1", "type": "string" },
+    { "key": "company_api_key", "value": "swiggy_test:replace_me", "type": "string" },
+    { "key": "rider_jwt", "value": "eyJ...", "type": "string" },
+    { "key": "order_id", "value": "SWG-2026-000123", "type": "string" },
+    { "key": "proof_id", "value": "0x0000000000000000000000000000000000000000000000000000000000000000", "type": "string" },
+    { "key": "rider_id", "value": "rider_987", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Company Backend",
+      "item": [
+        {
+          "name": "POST /orders — Register delivery coordinates",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.variables.set('base_url', pm.collectionVariables.get('base_url'));",
+                  "pm.variables.set('company_api_key', pm.collectionVariables.get('company_api_key'));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Has orderIdHash', () => pm.expect(json.orderIdHash).to.match(/^0x[0-9a-fA-F]{64}$/));",
+                  "pm.collectionVariables.set('order_id', json.orderId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-VGDP-Api-Key", "value": "{{company_api_key}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"SWG-2026-000123\",\n  \"riderId\": \"rider_987\",\n  \"riderDid\": \"did:ethr:0x8b6A000000000000000000000000000000000000\",\n  \"targetLatE7\": 129715990,\n  \"targetLonE7\": 775947220,\n  \"radiusMeters\": 75,\n  \"webhookUrl\": \"https://partner.example/webhooks/vgdp\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/orders", "host": ["{{base_url}}"], "path": ["orders"] }
+          }
+        },
+        {
+          "name": "GET /orders/:orderId/proof — Get proof status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.proofId) pm.collectionVariables.set('proof_id', json.proofId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-VGDP-Api-Key", "value": "{{company_api_key}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/proof",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}", "proof"]
+            }
+          }
+        },
+        {
+          "name": "POST /disputes/resolve — Trigger dispute resolution",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.variables.set('proof_id', pm.collectionVariables.get('proof_id'));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Outcome present', () => pm.expect(['rider_vindicated','customer_refund','unknown']).to.include(json.outcome));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-VGDP-Api-Key", "value": "{{company_api_key}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"proofId\": \"{{proof_id}}\",\n  \"expectedLatE7\": 129715990,\n  \"expectedLonE7\": 775947220,\n  \"radiusMeters\": 75,\n  \"reasonCode\": \"ORDER_NOT_RECEIVED\",\n  \"solidityProof\": {\n    \"a\": [\"0x0000000000000000000000000000000000000000000000000000000000000001\", \"0x0000000000000000000000000000000000000000000000000000000000000002\"],\n    \"b\": [[\"0x0000000000000000000000000000000000000000000000000000000000000003\", \"0x0000000000000000000000000000000000000000000000000000000000000004\"], [\"0x0000000000000000000000000000000000000000000000000000000000000005\", \"0x0000000000000000000000000000000000000000000000000000000000000006\"]],\n    \"c\": [\"0x0000000000000000000000000000000000000000000000000000000000000007\", \"0x0000000000000000000000000000000000000000000000000000000000000008\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/disputes/resolve",
+              "host": ["{{base_url}}"],
+              "path": ["disputes", "resolve"]
+            }
+          }
+        },
+        {
+          "name": "GET /riders/:riderId/trust — Get trust score with consent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Score in range', () => pm.expect(json.score).to.be.within(0, 100));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-VGDP-Api-Key", "value": "{{company_api_key}}" },
+              { "key": "X-Rider-DID-Hash", "value": "0x0000000000000000000000000000000000000000000000000000000000000001" },
+              { "key": "X-Rider-Wallet", "value": "0x0000000000000000000000000000000000000001" },
+              { "key": "X-Rider-Consent-Deadline", "value": "9999999999" },
+              { "key": "X-Rider-Consent-Signature", "value": "0xdeadbeef00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/riders/{{rider_id}}/trust",
+              "host": ["{{base_url}}"],
+              "path": ["riders", "{{rider_id}}", "trust"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rider App",
+      "item": [
+        {
+          "name": "POST /proofs — Submit proof bundle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Has proofId', () => pm.expect(json.proofId).to.match(/^0x[0-9a-fA-F]{64}$/));",
+                  "pm.collectionVariables.set('proof_id', json.proofId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{rider_jwt}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{order_id}}\",\n  \"riderDid\": \"did:ethr:0x8b6A000000000000000000000000000000000000\",\n  \"riderWallet\": \"0x8b6A000000000000000000000000000000000000\",\n  \"deliveredAtEpoch\": 1716000000,\n  \"photoPHash\": \"0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890\",\n  \"photoSalt\": \"0x1111111111111111111111111111111111111111111111111111111111111111\",\n  \"proof\": {\n    \"pi_a\": [\"1\", \"2\", \"1\"],\n    \"pi_b\": [[\"3\", \"4\"], [\"5\", \"6\"], [\"1\", \"0\"]],\n    \"pi_c\": [\"7\", \"8\", \"1\"]\n  },\n  \"publicSignals\": [\"1029715990\", \"1975947220\", \"75\", \"12345\", \"67890\", \"11111\"],\n  \"solidityProof\": {\n    \"a\": [\"0x0000000000000000000000000000000000000000000000000000000000000001\", \"0x0000000000000000000000000000000000000000000000000000000000000002\"],\n    \"b\": [[\"0x0000000000000000000000000000000000000000000000000000000000000003\", \"0x0000000000000000000000000000000000000000000000000000000000000004\"], [\"0x0000000000000000000000000000000000000000000000000000000000000005\", \"0x0000000000000000000000000000000000000000000000000000000000000006\"]],\n    \"c\": [\"0x0000000000000000000000000000000000000000000000000000000000000007\", \"0x0000000000000000000000000000000000000000000000000000000000000008\"]\n  },\n  \"bundleNonce\": \"0x2222222222222222222222222222222222222222222222222222222222222222\",\n  \"didSignature\": \"0xdeadbeef00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/proofs",
+              "host": ["{{base_url}}"],
+              "path": ["proofs"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+replicaCount:
+  api: 3
+  worker: 2
+
+image:
+  repository: ghcr.io/vgdp/validator
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  host: api.vgdp.example
+  tls: []
+
+resources:
+  api:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "512Mi"
+  worker:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
+autoscaling:
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+env:
+  PORT: "8080"
+  LOG_LEVEL: "info"
+  MAX_CLOCK_SKEW_SECONDS: "300"
+
+secretEnv:
+  POLYGON_RPC_URL: ""
+  REGISTRY_ADDRESS: ""
+  DISPUTE_RESOLVER_ADDRESS: ""
+  REPUTATION_ADDRESS: ""
+  VALIDATOR_PRIVATE_KEY: ""
+  VERIFICATION_KEY_PATH: "/app/zk/verification_key.json"
+  COMPANY_API_KEYS: ""
+  WEBHOOK_SIGNING_SECRET: ""
+  DATABASE_URL: ""

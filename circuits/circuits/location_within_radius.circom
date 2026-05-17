@@ -15,12 +15,12 @@ include "circomlib/circuits/comparators.circom";
 //   orderIdField         - uint256(orderIdHash) % SNARK_SCALAR_FIELD
 //   riderDidField        - uint256(riderDidHash) % SNARK_SCALAR_FIELD
 //   timestampField       - uint256(timestampHash) % SNARK_SCALAR_FIELD
-//   metersPerLonE7Q      - 111320 * cos(targetLat) * Q / 10_000_000
-//                          precomputed off-chain, passed as public input
 //
-// Private inputs (2):
+// Private inputs (3):
 //   actualLatShiftedE7   - actual lat + 900_000_000 (must be within radius)
 //   actualLonShiftedE7   - actual lon + 1_800_000_000 (must be within radius)
+//   metersPerLonE7Q      - 111320 * cos(targetLat) * Q / 10_000_000
+//                          precomputed off-chain, passed as private witness
 //
 // Q = 10^9 (fixed-point scale factor for integer arithmetic)
 // ============================================================
@@ -162,6 +162,5 @@ component main { public [
     maxRadiusMeters,
     orderIdField,
     riderDidField,
-    timestampField,
-    metersPerLonE7Q
+    timestampField
 ] } = LocationWithinRadiusLocalPlane();

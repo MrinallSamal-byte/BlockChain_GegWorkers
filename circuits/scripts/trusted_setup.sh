@@ -3,6 +3,12 @@
 # Uses a Powers of Tau ceremony file. For production, use a multi-party ceremony.
 set -euo pipefail
 
+if [ "${PRODUCTION:-}" = "true" ] || [ "${NODE_ENV:-}" = "production" ]; then
+  echo "ERROR: Do not use this single-contributor trusted setup in production."
+  echo "       Conduct a proper multi-party ceremony instead."
+  exit 1
+fi
+
 CIRCUIT=location_within_radius
 BUILD_DIR="$(dirname "$0")/../build"
 PTAU_FILE="powersOfTau28_hez_final_16.ptau"

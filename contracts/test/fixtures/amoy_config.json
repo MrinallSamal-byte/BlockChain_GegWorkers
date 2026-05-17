@@ -1,0 +1,8 @@
+{
+  "network": "polygon-amoy",
+  "chainId": 80002,
+  "rpcUrl": "https://polygon-amoy.drpc.org",
+  "blockExplorer": "https://amoy.polygonscan.com",
+  "nativeCurrency": "MATIC",
+  "contracts": {}
+}
